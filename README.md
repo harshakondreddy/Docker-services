@@ -1,7 +1,12 @@
 # Docker Services
 
-Small, self-contained container setups I use for labs, testing and day-to-day
-platform work. Each folder runs on its own and has its own README.
+Small, self-contained container setups from my personal R&D: things I tried out
+and wanted to keep. Each folder runs on its own and has its own README.
+
+> **About this repo:** a personal notebook, public only in case it's useful to
+> someone. It isn't a maintained project. There are no releases, no support, and
+> updates only happen when I need them. Test before using anything here on a
+> system you care about. Issues and PRs may not get a reply.
 
 | Folder | What it does | Runs on |
 |---|---|---|
