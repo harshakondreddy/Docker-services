@@ -39,6 +39,46 @@ Add it to a Pod's `initContainers` and set:
 
 The container exits `0` once every endpoint returns `200`, so the main container starts only when its dependencies are up.
 
+## Values to replace
+
+Everything environment-specific has been turned into a placeholder or a variable.
+Set these before you deploy.
+
+| Placeholder / variable | File | Replace with | Default if not set |
+|---|---|---|---|
+| `<namespace>` (the `-n` flag) | `local-llm/ollama-gemma3-4b.yaml` | Namespace the Ollama resources go into | none, `-n` is required |
+| `storageClassName` (commented out) | `local-llm/ollama-gemma3-4b.yaml` | Your cluster's StorageClass, e.g. an NFS provisioner | cluster default StorageClass |
+| `nodePort: 32080` | `local-llm/ollama-gemma3-4b.yaml` | A free port in your NodePort range (30000–32767) | `32080` |
+| `<node-ip>` | `local-llm/README.md` | IP or DNS name of any cluster node | — |
+| `URLs` | init container env | `;`-separated `host:port` list the app depends on, in `service.namespace:port` form | — (required) |
+| `ELASTIC_HOST` | `init-container/healthcheck.sh` | Elasticsearch `service.namespace:port`, exactly as written in `URLs` | `elasticsearch:9200` |
+| `ELASTIC_USERNAME` / `ELASTIC_PASSWORD` | init container env | Elasticsearch user and password, from a Kubernetes Secret | unset, so no auth is used |
+| `RETRY_TIME` | init container env | Seconds between checks | — (required) |
+| `RDP_USER` / `RDP_PASS` | `windows-vm/.env` | Windows login to create on first boot | — (required) |
+| `BIND_ADDR`, `RDP_PORT`, `VNC_PORT` | `windows-vm/.env` | Host IP and ports to publish on | `127.0.0.1`, `3389`, `8006` |
+
+> `ELASTIC_HOST` must match the entry in `URLs` character for character, otherwise
+> that endpoint is checked over plain HTTP without auth.
+
+Example init container block:
+
+```yaml
+initContainers:
+  - name: wait-for-deps
+    image: dependency-check:latest
+    env:
+      - name: URLs
+        value: "<es-service>.<namespace>:9200;<api-service>.<namespace>:8080"
+      - name: ELASTIC_HOST
+        value: "<es-service>.<namespace>:9200"
+      - name: RETRY_TIME
+        value: "10"
+      - name: ELASTIC_USERNAME
+        valueFrom: { secretKeyRef: { name: <es-secret>, key: username } }
+      - name: ELASTIC_PASSWORD
+        valueFrom: { secretKeyRef: { name: <es-secret>, key: password } }
+```
+
 ## Notes
 
 - No credentials are stored in this repo. Pass them at runtime through `.env` files or Kubernetes Secrets.
