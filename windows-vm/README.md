@@ -65,7 +65,7 @@ docker run -d \
   --memory="6g" \
   --cpus="4" \
   --restart unless-stopped \
-  dockur/windows:latest
+  dockurr/windows:latest
 ```
 
 > **Tip:** Ports are bound to `127.0.0.1` (loopback only).

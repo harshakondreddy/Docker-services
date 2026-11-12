@@ -1,5 +1,5 @@
 # Windows in Docker with RDP access
-# Built on dockur/windows which runs Windows via QEMU/KVM inside Docker
+# Built on dockurr/windows (github.com/dockur/windows) which runs Windows via QEMU/KVM inside Docker
 # Supports: Windows 11, Windows 10, Windows Server 2022, etc.
 #
 # Requirements (host):
@@ -9,7 +9,7 @@
 
 ARG WINDOWS_VERSION=11
 
-FROM dockur/windows:latest
+FROM dockurr/windows:latest
 
 # ARG declared before FROM is not visible after it, so declare it again
 ARG WINDOWS_VERSION
