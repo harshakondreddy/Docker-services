@@ -1,0 +1,70 @@
+version: "3.9"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Windows in Docker — RDP-enabled
+#
+# Usage:
+#   cp .env.example .env          # fill in your credentials
+#   docker compose up -d
+#   # Wait ~5-10 min for first-boot Windows installation
+#   # Then RDP to:  localhost:3389  (or <host-ip>:3389)
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+  windows:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: windows-rdp:latest
+    container_name: windows-rdp
+
+    # ── Privileges required by QEMU/KVM ─────────────────────────────────────
+    privileged: true            # needed for KVM + TUN/TAP networking
+    devices:
+      - /dev/kvm:/dev/kvm       # hardware virtualisation (required)
+      - /dev/net/tun:/dev/net/tun # virtual NIC for the Windows VM
+
+    # ── Persistent storage ───────────────────────────────────────────────────
+    volumes:
+      - windows-data:/storage   # Windows disk image persists across restarts
+
+    # ── Port exposure ────────────────────────────────────────────────────────
+    # SECURITY: bind to 127.0.0.1 so ports are NOT exposed to the internet.
+    # Use an SSH tunnel or VPN to reach RDP from a remote machine:
+    #   ssh -L 3389:localhost:3389 user@your-server
+    ports:
+      - "${BIND_ADDR:-127.0.0.1}:${RDP_PORT:-3389}:3389/tcp"
+      - "${BIND_ADDR:-127.0.0.1}:${RDP_PORT:-3389}:3389/udp"
+      - "${BIND_ADDR:-127.0.0.1}:${VNC_PORT:-8006}:8006/tcp"
+
+    # ── Windows configuration ────────────────────────────────────────────────
+    environment:
+      # Windows edition (11 = Win 11 Pro)
+      VERSION:    "${WINDOWS_VERSION:-11}"
+      # VM resources
+      RAM_SIZE:   "${RAM_SIZE:-4G}"
+      CPU_CORES:  "${CPU_CORES:-2}"
+      DISK_SIZE:  "${DISK_SIZE:-64G}"
+      # RDP credentials set inside Windows on first boot
+      USERNAME:   "${RDP_USER}"
+      PASSWORD:   "${RDP_PASS}"
+
+    # ── Resource limits (prevent container from consuming all host RAM) ───────
+    mem_limit: "${MEM_LIMIT:-6g}"
+    cpus: "${CPU_LIMIT:-4}"
+
+    # ── Restart policy ───────────────────────────────────────────────────────
+    restart: unless-stopped
+
+    # ── Health check via VNC web port ────────────────────────────────────────
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8006/"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+
+# ── Named volume ─────────────────────────────────────────────────────────────
+volumes:
+  windows-data:
+    driver: local
