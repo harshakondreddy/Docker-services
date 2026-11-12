@@ -1,4 +1,4 @@
-FROM debian:stretch-20200422-slim
+FROM debian:bookworm-slim
 
 RUN apt update -y
 

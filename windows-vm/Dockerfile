@@ -11,6 +11,9 @@ ARG WINDOWS_VERSION=11
 
 FROM dockur/windows:latest
 
+# ARG declared before FROM is not visible after it, so declare it again
+ARG WINDOWS_VERSION
+
 # ── Environment: Windows edition ────────────────────────────────────────────
 # VERSION options:
 #   "11"      → Windows 11 Pro (latest, default)
